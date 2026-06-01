@@ -103,7 +103,7 @@ export default function App() {
             cursor: 'pointer', fontSize: 13,
           }}
         >
-          ⚙ Configure
+          ℹ About
         </button>
       </header>
 
