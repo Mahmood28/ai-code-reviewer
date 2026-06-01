@@ -45,6 +45,98 @@ function checkAuth(user, pass) {
 }
 
 app.listen(3000);`,
+
+  typescript: `import express, { Request, Response } from 'express';
+const app = express();
+
+interface User {
+  id: number;
+  name: string;
+  password: string;
+}
+
+const users: User[] = [];
+
+app.get('/user', (req: Request, res: Response) => {
+  const id = req.query.id;
+  // BUG: no validation, type coercion issues
+  const user = users.find(u => u.id == (id as any));
+  if (!user) res.send('not found');
+  res.json(user);
+});
+
+function hashPassword(pw: string) {
+  // TODO: use bcrypt
+  return pw;
+}
+
+const SECRET = "hardcoded-jwt-secret-123";
+app.listen(3000);`,
+
+  java: `import java.sql.*;
+
+public class UserService {
+    private static final String DB_URL = "jdbc:mysql://localhost/mydb";
+    private static final String PASSWORD = "admin123"; // hardcoded
+
+    public User getUser(String username) throws Exception {
+        Connection conn = DriverManager.getConnection(DB_URL, "root", PASSWORD);
+        Statement stmt = conn.createStatement();
+        // SQL injection vulnerability
+        String query = "SELECT * FROM users WHERE username = '" + username + "'";
+        ResultSet rs = stmt.executeQuery(query);
+        User user = null;
+        if (rs.next()) {
+            user = new User(rs.getInt("id"), rs.getString("username"));
+        }
+        // connection never closed
+        return user;
+    }
+
+    public void processItems(int[] items) {
+        int result = 0;
+        for (int i = 0; i < items.length; i++) {
+            result = result + items[i] * 2;
+        }
+        System.out.println(result);
+    }
+}`,
+
+  go: `package main
+
+import (
+    "database/sql"
+    "fmt"
+    "net/http"
+)
+
+var db *sql.DB
+var secretKey = "hardcoded-secret"
+
+func getUser(w http.ResponseWriter, r *http.Request) {
+    username := r.URL.Query().Get("username")
+    // SQL injection
+    row := db.QueryRow("SELECT * FROM users WHERE username = '" + username + "'")
+    var id int
+    var name string
+    row.Scan(&id, &name) // error ignored
+    fmt.Fprintf(w, "User: %s", name)
+}
+
+func processData(items []int) []int {
+    result := []int{}
+    for i := 0; i < len(items); i++ {
+        if items[i] > 0 {
+            result = append(result, items[i]*2)
+        }
+    }
+    return result
+}
+
+func main() {
+    http.HandleFunc("/user", getUser)
+    http.ListenAndServe(":8080", nil)
+}`,
 };
 
 export default function App() {
@@ -115,7 +207,7 @@ export default function App() {
           onCodeChange={setCode}
           onLanguageChange={(lang) => setLanguage(lang as Language)}
           onReview={handleReview}
-          onLoadSample={() => setCode(SAMPLES[language] ?? SAMPLES.python ?? '')}
+          onLoadSample={() => setCode(SAMPLES[language] ?? '')}
         />
         <ReviewPanel review={review} loading={loading} error={error} code={code} language={language} />
       </div>
