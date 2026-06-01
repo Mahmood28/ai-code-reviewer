@@ -3,7 +3,7 @@ interface Props {
   language: string;
   loading: boolean;
   onCodeChange: (code: string) => void;
-  onLanguageChange: (lang: string) => void;
+  onLanguageChange: (lang: string) => void; // string keeps this component decoupled from the Language union
   onReview: () => void;
   onLoadSample: () => void;
 }

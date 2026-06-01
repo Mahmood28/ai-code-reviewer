@@ -113,7 +113,7 @@ export default function App() {
           language={language}
           loading={loading}
           onCodeChange={setCode}
-          onLanguageChange={setLanguage}
+          onLanguageChange={(lang) => setLanguage(lang as Language)}
           onReview={handleReview}
           onLoadSample={() => setCode(SAMPLES[language] ?? SAMPLES.python ?? '')}
         />
